@@ -2,17 +2,21 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
+    public GameObject[] players;
     private const int COIN_SCORE_AMOUNT = 5;
     public static GameManager Instance { set; get; }
 
     public bool IsDead { set; get; }
     private PlayerMotor motor;
 
+    private bool isSilent = false;
+
     private bool isGameStarted = false;
-    public GameObject highScoreObject, innerHighScore;
+    public GameObject highScoreObject, innerHighScore, silent, playButton, menuButton, menuOptions;
 
     // UI and the UI feilds
     public Animator gameCanvas, menuAnim, diamondAnim;
@@ -26,10 +30,11 @@ public class GameManager : MonoBehaviour
     // Death menu
     public Animator deathMenuAnim;
     public TextMeshProUGUI deadScoreText, deadCoinText;
-
-
+    public int player;
     private void Awake() 
     {
+        player = PlayerSelector.sp;
+
         Instance = this;
         modifierScore = 1;         
         motor = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerMotor>();
@@ -43,7 +48,7 @@ public class GameManager : MonoBehaviour
 
     private void Update() 
     {
-        if(MobileInput.Instance.Tap && !isGameStarted)    
+        /**if(MobileInput.Instance.Tap && !isGameStarted)    
         {
             audioPlay.Play();
             isGameStarted = true;
@@ -52,7 +57,8 @@ public class GameManager : MonoBehaviour
             FindObjectOfType<CameraMotor>().IsMoving = true;
             gameCanvas.SetTrigger("Show");
             menuAnim.SetTrigger("Hide");
-        }
+        }*/
+        SelectedPlayer();
 
         if(isGameStarted && !IsDead)
         {
@@ -102,6 +108,7 @@ public class GameManager : MonoBehaviour
         deadCoinText.text = coinScore.ToString("0");
         deathMenuAnim.SetTrigger("Dead");
         gameCanvas.SetTrigger("Hide");
+        
 
          
         // Check if this is highscore
@@ -117,5 +124,65 @@ public class GameManager : MonoBehaviour
     public void ResetHighScore()
     {
         PlayerPrefs.SetInt("highScore", 0);
+    }
+
+    public void MenuOption()
+    {
+        menuOptions.SetActive(true);
+        SceneManager.LoadScene("Players");
+    }
+
+    public void OncancelB()
+    {
+        menuOptions.SetActive(false);
+    }
+    public void SelectedPlayer()
+    {
+        players[player].SetActive(true);
+        for (int n = 0; n < players.Length; n++)
+        {
+            if(n != player)
+            {
+                players[n].SetActive(false);
+            }
+        }            
+    }
+    public void OnPlay()
+    {
+            audioPlay.Play();
+            isGameStarted = true;
+            motor.StartRunning();
+            FindObjectOfType<GlacierSpawner>().IsScrolling = true;
+            FindObjectOfType<CameraMotor>().IsMoving = true;
+            gameCanvas.SetTrigger("Show");
+            menuAnim.SetTrigger("Hide");
+            playButton.SetActive(false);
+            menuButton.SetActive(false);
+    }
+
+    public void MuteButton()
+    {
+        if(!isSilent)
+            AudioOff();
+        else
+            AudioOn();
+    }
+    public void AudioOff()
+    {
+        silent.SetActive(true);
+        audioCrash.volume = 0;
+        audioPlay.volume = 0;
+        audioBackGround.volume = 0;
+        audioPoint.volume = 0;
+        isSilent = true;
+    }
+    public void AudioOn()
+    {
+        silent.SetActive(false);
+        audioCrash.volume = 1.0f;
+        audioPlay.volume = 0.5f;
+        audioBackGround.volume = 0.1f;
+        audioPoint.volume = 1.0f;
+        isSilent = false;
     }
 }
